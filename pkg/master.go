@@ -3,43 +3,39 @@ package pkg
 import (
 	//系统
 	"fmt"
+	"log"
 	"github.com/Hamster601/Budd/config"
 
 	//第三方
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/juju/errors"
-	"github.com/siddontang/go-log/log"
 	"github.com/siddontang/go-mysql/mysql"
 )
 
 func loadMasterInfo(serverId uint32, masterInfo config.MasterInfo) (*dbInfo, error) {
 	var m dbInfo
 
-	user := masterInfo.User
-	pwd := masterInfo.Pwd
-	addr := masterInfo.Addr
-	port := masterInfo.Port
 	schema := masterInfo.Schema
 	table := masterInfo.Table
-	charset := masterInfo.Charset
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?charset=%s", user, pwd, addr, port, charset)
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?charset=%s", masterInfo.User, masterInfo.Pwd,
+		masterInfo.Addr, masterInfo.Port, masterInfo.Charset)
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		log.Errorf("sql Open error: %s", err)
-		return nil, errors.Trace(err)
+		log.Printf("sql Open error: %s", err)
+		return nil, err
 	}
 	if err = db.Ping(); err != nil {
-		log.Errorf("db ping error: %s", err)
-		return nil, errors.Trace(err)
+		log.Printf("db ping error: %s", err)
+		return nil, err
 	}
 
 	//若没有schema:bin2es, 则创建
 	dbSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", schema)
 	if _, err := db.Exec(dbSQL); err != nil {
-		log.Errorf("create database %s failed, err:%s", schema, err)
-		return nil, errors.Trace(err)
+		log.Printf("create database %s failed, err:%s", schema, err)
+		return nil, err
 	}
 
 	//若没有table:master_info, 则创建
@@ -52,8 +48,8 @@ func loadMasterInfo(serverId uint32, masterInfo config.MasterInfo) (*dbInfo, err
 		)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='binlog位置表'
 	`, schema, table)
 	if _, err := db.Exec(tblSQL); err != nil {
-		log.Errorf("create table %s failed, err:%s", table, err)
-		return nil, errors.Trace(err)
+		log.Printf("create table %s failed, err:%s", table, err)
+		return nil, err
 	}
 
 	//读取master_info的`bin_name` `bin_pos`
@@ -62,8 +58,8 @@ func loadMasterInfo(serverId uint32, masterInfo config.MasterInfo) (*dbInfo, err
 	querySQL := fmt.Sprintf("SELECT bin_name, bin_pos FROM %s.%s WHERE server_id = %d", schema, table, serverId)
 	rows, err := db.Query(querySQL)
 	if err != nil {
-		log.Errorf("query %s.%s failed, err:%s", schema, table, err)
-		return nil, errors.Trace(err)
+		log.Printf("query %s.%s failed, err:%s", schema, table, err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -72,23 +68,23 @@ func loadMasterInfo(serverId uint32, masterInfo config.MasterInfo) (*dbInfo, err
 		num += 1
 		err = rows.Scan(&name, &pos)
 		if err != nil {
-			log.Errorf("iteration %s.%s failed, err:%s", schema, table, err)
-			return nil, errors.Trace(err)
+			log.Printf("iteration %s.%s failed, err:%s", schema, table, err)
+			return nil, err
 		}
-		log.Infof("bin_name:%s bin_pos:%d", name, pos)
+		log.Printf("bin_name:%s bin_pos:%d", name, pos)
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Errorf("rows.Err:%s", err)
-		return nil, errors.Trace(err)
+		log.Printf("rows.Err:%s", err)
+		return nil, err
 	}
 
 	if num == 0 {
 		insertSQL := fmt.Sprintf("INSERT INTO %s.%s (server_id, bin_name, bin_pos) VALUES (%d, %s, %d)", schema, table, serverId, "''", 0)
-		log.Info(insertSQL)
+		log.Println(insertSQL)
 		if _, err := db.Exec(insertSQL); err != nil {
-			log.Infof("insert %s.%s failed, err:%s", schema, table, err)
-			return nil, errors.Trace(err)
+			log.Printf("insert %s.%s failed, err:%s", schema, table, err)
+			return nil, err
 		}
 	}
 
@@ -99,11 +95,11 @@ func loadMasterInfo(serverId uint32, masterInfo config.MasterInfo) (*dbInfo, err
 	m.table = table
 	m.serverId = serverId
 
-	return &m, errors.Trace(err)
+	return &m, err
 }
 
 func (m *dbInfo) Save(pos mysql.Position) error {
-	log.Infof("save position %s", pos)
+	log.Printf("save position %s", pos)
 
 	m.Lock()
 	defer m.Unlock()
@@ -115,10 +111,10 @@ func (m *dbInfo) Save(pos mysql.Position) error {
 	var err error
 	updateSQL := fmt.Sprintf("UPDATE %s.%s SET bin_name = '%s', bin_pos = %d WHERE server_id = %d", m.schema, m.table, m.name, m.pos, m.serverId)
 	if _, err = m.db.Exec(updateSQL); err != nil {
-		log.Errorf("update %s.%s failed, err:%s", m.schema, m.table, err)
+		log.Printf("update %s.%s failed, err:%s", m.schema, m.table, err)
 	}
 
-	return errors.Trace(err)
+	return err
 }
 
 func (m *dbInfo) Position() mysql.Position {
@@ -140,7 +136,7 @@ func (m *dbInfo) SetPosition(p mysql.Position) {
 }
 
 func (m *dbInfo) Close() error {
-	log.Info("----- closing master -----")
+	log.Println("----- closing master -----")
 
 	pos := m.Position()
 

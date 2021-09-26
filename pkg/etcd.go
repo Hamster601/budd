@@ -26,16 +26,16 @@ type EtcdCli struct {
 	dialTimeout int
 }
 
-func newEtcdCli(config2 *config.Config) *EtcdCli {
-	lockKey := fmt.Sprintf("%s-%d",config2.Etcd.LockPath,config2.MysqlSlave.ServerID)
+func newEtcdCli(cfg *config.Config) *EtcdCli {
+	lockKey := fmt.Sprintf("%s-%d", cfg.Etcd.LockPath, cfg.MysqlSlave.ServerID)
 	return &EtcdCli{
-		serverId:    config2.MysqlSlave.ServerID,
+		serverId:    cfg.MysqlSlave.ServerID,
 		lockPath:    lockKey,
-		endPoints:   config2.Etcd.Endpoints,
-		certPath:    config2.Etcd.CertPath,
-		keyPath:     config2.Etcd.KeyPath,
-		caPath:      config2.Etcd.CaPath,
-		dialTimeout: config2.Etcd.DialTimeout,
+		endPoints:   cfg.Etcd.Endpoints,
+		certPath:    cfg.Etcd.CertPath,
+		keyPath:     cfg.Etcd.KeyPath,
+		caPath:      cfg.Etcd.CaPath,
+		dialTimeout: cfg.Etcd.DialTimeout,
 	}
 }
 

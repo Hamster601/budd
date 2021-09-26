@@ -11,23 +11,23 @@ import (
 	es7 "github.com/olivere/elastic/v7"
 )
 
-type MyES struct {
+type ESClient struct {
 	client      *es7.Client
 	bulkService *es7.BulkService
 	ctx         context.Context
 }
 
-type MyRetrier struct {
+type ESRetrier struct {
 	backoff es7.Backoff
 }
 
-func NewMyRetrier() *MyRetrier {
-	return &MyRetrier{
+func NewMyRetrier() *ESRetrier {
+	return &ESRetrier{
 		backoff: es7.NewConstantBackoff(time.Second),
 	}
 }
 
-func (r *MyRetrier) Retry(ctx context.Context, retry int, req *http.Request, resp *http.Response, err error) (time.Duration, bool, error) {
+func (r *ESRetrier) Retry(ctx context.Context, retry int, req *http.Request, resp *http.Response, err error) (time.Duration, bool, error) {
 	// 在一个特定的error上退出
 	if err == syscall.ECONNREFUSED {
 		return 0, false, errors.New("Elasticsearch or network down")
@@ -41,8 +41,8 @@ func (r *MyRetrier) Retry(ctx context.Context, retry int, req *http.Request, res
 	return wait, stop, nil
 }
 
-func (e *MyES) Close() {
-	defer log.Print("----- ES closed -----")
+func (e *ESClient) Close() {
+	defer log.Print("----- ES Exited -----")
 
 	e.client.Stop()
 }

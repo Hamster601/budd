@@ -64,7 +64,7 @@ type Bin2es struct {
 	canal      *canal.Canal
 	wg         sync.WaitGroup
 	master     *dbInfo
-	esCli      *MyES
+	esCli      *ESClient
 	syncCh     chan interface{}
 	refFuncMap RefFuncMap
 	event2Pipe Event2Pipe
@@ -213,7 +213,7 @@ func (b *Bin2es) initBin2esConf() error {
 
 func (b *Bin2es) newES() error {
 	var err error
-	b.esCli = new(MyES)
+	b.esCli = new(ESClient)
 	b.esCli.ctx = b.Ctx()
 
 	httpClient := http.DefaultClient
