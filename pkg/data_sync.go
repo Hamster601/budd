@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	constvar "github.com/Hamster601/Budd/pkg/const"
 	es7 "github.com/olivere/elastic/v7"
 	"io/ioutil"
 	"log"
@@ -140,7 +141,7 @@ func (b *Bin2es) newCanal() error {
 	}
 
 	// We must use binlog full row image
-	if err = b.canal.CheckBinlogRowImage("FULL"); err != nil {
+	if err = b.canal.CheckBinlogRowImage(constvar.CanalROWImageFull); err != nil {
 		return err
 	}
 

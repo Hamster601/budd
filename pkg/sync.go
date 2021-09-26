@@ -81,7 +81,7 @@ func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
 
 	body := make(map[string]string)
 	for i := 0; i < len(columns); i++ {
-		body[columns[i].Name] = toString(values[i])
+		body[columns[i].Name] = String(values[i])
 	}
 	message["schema"] = schema
 	message["table"] = table
@@ -260,7 +260,7 @@ func (b *Bin2es) Pipeline(binRow map[string]interface{}) error {
 	return nil
 }
 
-func toString(i interface{}) string {
+func String(i interface{}) string {
 	switch i := i.(type) {
 	case int:
 		return strconv.FormatInt(int64(i), 10)
