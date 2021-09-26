@@ -15,6 +15,7 @@ var conf_path = flag.String("config", "./config/config.toml", "config file path"
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	flag.Parse() //解析命令行参数
 
 	quitSignal := make(chan os.Signal)
