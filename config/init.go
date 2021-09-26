@@ -7,7 +7,7 @@ import (
 )
 
 // NewConfig creates a Config from data.
-func NewConfig(data string) (*Config, error) {
+func newConfig(data string) (*Config, error) {
 	var c Config
 
 	_, err := toml.Decode(data, &c)
@@ -25,5 +25,5 @@ func NewConfigWithFile(path string) (*Config, error) {
 		return nil, err
 	}
 
-	return NewConfig(string(data))
+	return newConfig(string(data))
 }

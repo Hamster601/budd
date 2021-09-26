@@ -50,10 +50,10 @@ endpoints = [
 	"127.0.0.1:2379"
 	]
 
-[source]
+[[source]]
 schema = "test"
 dump_table = "Parent"
 tables = [
 	"Parent",
     "Child"
-]
+	]
