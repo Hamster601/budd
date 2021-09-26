@@ -26,25 +26,30 @@ type EtcdCli struct {
 	dialTimeout int
 }
 
-func NewEtcd(c *config.Config) (*EtcdCli, error) {
-	e := new(EtcdCli)
-	e.serverId = c.MysqlSlave.ServerID
-	e.lockPath = fmt.Sprintf("%s-%d", c.Etcd.LockPath, e.serverId)
-	e.endPoints = c.Etcd.Endpoints
-	e.certPath = c.Etcd.CertPath
-	e.keyPath = c.Etcd.KeyPath
-	e.caPath = c.Etcd.CaPath
-	e.dialTimeout = c.Etcd.DialTimeout
+func newEtcdCli(config2 *config.Config) *EtcdCli {
+	lockKey := fmt.Sprintf("%s-%d",config2.Etcd.LockPath,config2.MysqlSlave.ServerID)
+	return &EtcdCli{
+		serverId:    config2.MysqlSlave.ServerID,
+		lockPath:    lockKey,
+		endPoints:   config2.Etcd.Endpoints,
+		certPath:    config2.Etcd.CertPath,
+		keyPath:     config2.Etcd.KeyPath,
+		caPath:      config2.Etcd.CaPath,
+		dialTimeout: config2.Etcd.DialTimeout,
+	}
+}
 
-	var err error
+func NewEtcd(c *config.Config) (etcdCli *EtcdCli, err error) {
+	etcdCli = newEtcdCli(c)
+
 	var tlsConfig *tls.Config
+
 	if c.Etcd.EnableTLS {
 		tlsInfo := transport.TLSInfo{
-			CertFile:      e.certPath,
-			KeyFile:       e.keyPath,
-			TrustedCAFile: e.caPath,
+			CertFile:      etcdCli.certPath,
+			KeyFile:       etcdCli.keyPath,
+			TrustedCAFile: etcdCli.caPath,
 		}
-
 		tlsConfig, err = tlsInfo.ClientConfig()
 		if err != nil {
 			log.Println("etcd init tls config failed, err:", err)
@@ -52,41 +57,33 @@ func NewEtcd(c *config.Config) (*EtcdCli, error) {
 		}
 	}
 
-	if e.client, err = clientv3.New(clientv3.Config{
-		Endpoints:   e.endPoints,
-		DialTimeout: time.Duration(e.dialTimeout) * time.Second,
+	clientV3Cfg := clientv3.Config{
+		Endpoints:   etcdCli.endPoints,
+		DialTimeout: time.Duration(etcdCli.dialTimeout) * time.Second,
 		TLS:         tlsConfig,
-	}); err != nil {
+	}
+
+	if etcdCli.client, err = clientv3.New(clientV3Cfg); err != nil {
 		log.Println("etcd create client failed, err:", err)
 		return nil, err
 	}
 
-	if e.session, err = concurrency.NewSession(e.client); err != nil {
+	if etcdCli.session, err = concurrency.NewSession(etcdCli.client); err != nil {
 		log.Println("etcd create session failed, err:", err)
 		return nil, err
 	}
 
-	e.mutex = concurrency.NewMutex(e.session, e.lockPath)
+	etcdCli.mutex = concurrency.NewMutex(etcdCli.session, etcdCli.lockPath)
 
-	return e, nil
+	return etcdCli, nil
 }
 
 func (e *EtcdCli) Lock() error {
-	if err := e.mutex.Lock(context.TODO()); err != nil {
-		log.Printf("etcd mutex failed, err:%s", err.Error())
-		return err
-	}
-
-	return nil
+    return e.mutex.Lock(context.TODO())
 }
 
 func (e *EtcdCli) UnLock() error {
-	if err := e.mutex.Unlock(context.TODO()); err != nil {
-		log.Printf("etcd unlock failed, err:%s", err.Error())
-		return err
-	}
-
-	return nil
+	return e.mutex.Unlock(context.TODO())
 }
 
 func (e *EtcdCli) Close() {
