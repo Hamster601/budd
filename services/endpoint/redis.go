@@ -27,31 +27,30 @@ type RedisEndpoint struct {
 	retryLock sync.Mutex
 }
 
-func newRedisEndpoint(filename string) *RedisEndpoint {
-	cfg ,_:=config.NewConfig(filename)
+func newRedisEndpoint() *RedisEndpoint {
 	r := &RedisEndpoint{}
 
-	list := strings.Split(cfg.RedisConfig.RedisAddr, ",")
+	list := strings.Split(config.InitConfig.RedisConfig.RedisAddr, ",")
 	if len(list) == 1 {
 		r.client = redis.NewClient(&redis.Options{
-			Addr:     cfg.RedisConfig.RedisAddr,
-			Password: cfg.RedisConfig.RedisPass,
-			DB:       cfg.RedisConfig.RedisDatabase,
+			Addr:     config.InitConfig.RedisConfig.RedisAddr,
+			Password: config.InitConfig.RedisConfig.RedisPass,
+			DB:       config.InitConfig.RedisConfig.RedisDatabase,
 		})
 	} else {
-		if cfg.RedisConfig.RedisGroupType == config.RedisGroupTypeSentinel {
+		if config.InitConfig.RedisConfig.RedisGroupType == config.RedisGroupTypeSentinel {
 			r.client = redis.NewFailoverClient(&redis.FailoverOptions{
-				MasterName:    cfg.RedisConfig.RedisMasterName,
+				MasterName:    config.InitConfig.RedisConfig.RedisMasterName,
 				SentinelAddrs: list,
-				Password:      cfg.RedisConfig.RedisPass,
-				DB:            cfg.RedisConfig.RedisDatabase,
+				Password:      config.InitConfig.RedisConfig.RedisPass,
+				DB:            config.InitConfig.RedisConfig.RedisDatabase,
 			})
 		}
-		if cfg.RedisConfig.RedisGroupType == config.RedisGroupTypeCluster {
+		if config.InitConfig.RedisConfig.RedisGroupType == config.RedisGroupTypeCluster {
 			r.isCluster = true
 			r.cluster = redis.NewClusterClient(&redis.ClusterOptions{
 				Addrs:    list,
-				Password: cfg.RedisConfig.RedisPass,
+				Password: config.InitConfig.RedisConfig.RedisPass,
 			})
 		}
 	}

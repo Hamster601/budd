@@ -23,19 +23,14 @@ type Elastic7Endpoint struct {
 	hosts  []string
 	client *elastic.Client
 	retryLock sync.Mutex
-	cfg config.Config
 }
 
-func newElastic7Endpoint(filapath string) *Elastic7Endpoint {
-	config,err := config.NewConfig(filapath)
-	if err != nil {
-		return nil
-	}
-	hosts := elsHosts(config.ESConfig.ElsAddr)
+func newElastic7Endpoint() *Elastic7Endpoint {
+
+	hosts := elsHosts(config.InitConfig.ESConfig.ElsAddr)
 	r := &Elastic7Endpoint{}
 	r.hosts = hosts
 	r.first = hosts[0]
-	r.cfg = *config
 	return r
 }
 
@@ -43,8 +38,8 @@ func (s *Elastic7Endpoint) Connect() error {
 	var options []elastic.ClientOptionFunc
 	options = append(options, elastic.SetErrorLog(logagent.NewElsLoggerAgent()))
 	options = append(options, elastic.SetURL(s.hosts...))
-	if s.cfg.ESConfig.ElsUser != "" && s.cfg.ESConfig.ElsPassword!= "" {
-		options = append(options, elastic.SetBasicAuth(s.cfg.ESConfig.ElsUser, s.cfg.ESConfig.ElsPassword))
+	if config.InitConfig.ESConfig.ElsUser != "" && config.InitConfig.ESConfig.ElsPassword!= "" {
+		options = append(options, elastic.SetBasicAuth(config.InitConfig.ESConfig.ElsUser, config.InitConfig.ESConfig.ElsPassword))
 	}
 
 	client, err := elastic.NewClient(options...)
@@ -180,7 +175,7 @@ func (s *Elastic7Endpoint) Consume(from mysql.Position, rows []*model.RowRequest
 			continue
 		}
 
-		metric.UpdateActionNum(row.Action, row.RuleKey,s.cfg.EnableExporter)
+		metric.UpdateActionNum(row.Action, row.RuleKey,config.InitConfig.EnableExporter)
 
 		if rule.LuaEnable() {
 			kvm := rowMap(row, rule, true)

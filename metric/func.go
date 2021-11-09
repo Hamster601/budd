@@ -1,9 +1,24 @@
 package metric
 
 import (
+	"fmt"
+	"github.com/Hamster601/Budd/config"
 	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
 )
 
+
+func Initialize() error {
+	if config.InitConfig.EnableExporter {
+		go func() {
+			http.Handle("/", promhttp.Handler())
+			http.ListenAndServe(fmt.Sprintf(":%d", config.InitConfig.ExporterPort), nil)
+		}()
+	}
+
+	return nil
+}
 
 func SetLeaderState(state int,isExport bool) {
 	if isExport {

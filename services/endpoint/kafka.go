@@ -22,13 +22,10 @@ client   sarama.Client
 producer sarama.AsyncProducer
 
 retryLock sync.Mutex
-cfg config.Config
 }
 
-func newKafkaEndpoint(cfg config.Config) *KafkaEndpoint {
-	r := &KafkaEndpoint{
-		cfg: cfg,
-	}
+func newKafkaEndpoint() *KafkaEndpoint {
+	r := &KafkaEndpoint{}
 	return r
 }
 
@@ -36,15 +33,15 @@ func (s *KafkaEndpoint) Connect() error {
 	cfg := sarama.NewConfig()
 	cfg.Producer.Partitioner = sarama.NewRandomPartitioner
 
-	if s.cfg.KafkaConfig.KafkaSASLUser != "" && s.cfg.KafkaConfig.KafkaSASLPassword != "" {
+	if config.InitConfig.KafkaConfig.KafkaSASLUser != "" && config.InitConfig.KafkaConfig.KafkaSASLPassword != "" {
 		cfg.Net.SASL.Enable = true
-		cfg.Net.SASL.User = s.cfg.KafkaConfig.KafkaSASLUser
-		cfg.Net.SASL.Password = s.cfg.KafkaConfig.KafkaSASLPassword
+		cfg.Net.SASL.User = config.InitConfig.KafkaConfig.KafkaSASLUser
+		cfg.Net.SASL.Password = config.InitConfig.KafkaConfig.KafkaSASLPassword
 	}
 
 	var err error
 	var client sarama.Client
-	ls := strings.Split(s.cfg.KafkaConfig.KafkaSASLUser, ",")
+	ls := strings.Split(config.InitConfig.KafkaConfig.KafkaSASLUser, ",")
 	client, err = sarama.NewClient(ls, cfg)
 	if err != nil {
 		return errors.New(fmt.Sprintf("unable to create kafka client: %s", err.Error()))
@@ -75,7 +72,7 @@ func (s *KafkaEndpoint) Consume(from mysql.Position, rows []*model.RowRequest) e
 			continue
 		}
 
-		metric.UpdateActionNum(row.Action, row.RuleKey,s.cfg.EnableExporter)
+		metric.UpdateActionNum(row.Action, row.RuleKey,config.InitConfig.EnableExporter)
 
 		if rule.LuaEnable() {
 			ls, err := s.buildMessages(row, rule)

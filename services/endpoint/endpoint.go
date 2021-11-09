@@ -28,25 +28,24 @@ type Endpoint interface {
 	Close()
 }
 
-func NewEndpoint(ds *canal.Canal,filepath string) Endpoint {
-	cfg,_ := config.NewConfig(filepath)
+func NewEndpoint(ds *canal.Canal,) Endpoint {
 	luaengine.InitActuator(ds)
 
-	if cfg.IsRedis() {
-		return newRedisEndpoint(filepath)
+	if config.InitConfig.IsRedis() {
+		return newRedisEndpoint()
 	}
 
 
-	if cfg.IsKafka() {
-		return newKafkaEndpoint(*cfg)
+	if config.InitConfig.IsKafka() {
+		return newKafkaEndpoint()
 	}
 
-	if cfg.IsEls() {
-			return newElastic7Endpoint(filepath)
+	if config.InitConfig.IsEls() {
+			return newElastic7Endpoint()
 
 	}
 
-	if cfg.IsScript() {
+	if config.InitConfig.IsScript() {
 		return newScriptEndpoint()
 	}
 

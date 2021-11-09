@@ -1,0 +1,179 @@
+package services
+
+import (
+	"github.com/Hamster601/Budd/config"
+	"github.com/Hamster601/Budd/metric"
+	"github.com/Hamster601/Budd/pkg/logs"
+	"github.com/Hamster601/Budd/pkg/model"
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
+	"github.com/siddontang/go-log/log"
+	"time"
+)
+
+type handler struct {
+	queue chan interface{}
+	stop  chan struct{}
+}
+
+func newHandler() *handler {
+	return &handler{
+		queue: make(chan interface{}, 4096),
+		stop:  make(chan struct{}, 1),
+	}
+}
+
+func (s *handler) OnRotate(e *replication.RotateEvent) error {
+	s.queue <- model.PosRequest{
+		Name:  string(e.NextLogName),
+		Pos:   uint32(e.Position),
+		Force: true,
+	}
+	return nil
+}
+
+func (s *handler) OnTableChanged(schema, table string) error {
+	err := _transferService.updateRule(schema, table)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *handler) OnDDL(nextPos mysql.Position, _ *replication.QueryEvent) error {
+	s.queue <- model.PosRequest{
+		Name:  nextPos.Name,
+		Pos:   nextPos.Pos,
+		Force: true,
+	}
+	return nil
+}
+
+func (s *handler) OnXID(nextPos mysql.Position) error {
+	s.queue <- model.PosRequest{
+		Name:  nextPos.Name,
+		Pos:   nextPos.Pos,
+		Force: false,
+	}
+	return nil
+}
+
+func (s *handler) OnRow(e *canal.RowsEvent) error {
+	ruleKey := config.RuleKey(e.Table.Schema, e.Table.Name)
+	if !config.RuleInsExist(ruleKey) {
+		return nil
+	}
+
+	var requests []*model.RowRequest
+	if e.Action != canal.UpdateAction {
+		// 定长分配
+		requests = make([]*model.RowRequest, 0, len(e.Rows))
+	}
+
+	if e.Action == canal.UpdateAction {
+		for i := 0; i < len(e.Rows); i++ {
+			if (i+1)%2 == 0 {
+				v := new(model.RowRequest)
+				v.RuleKey = ruleKey
+				v.Action = e.Action
+				v.Timestamp = e.Header.Timestamp
+				if config.InitConfig.IsReserveRawData() {
+					v.Old = e.Rows[i-1]
+				}
+				v.Row = e.Rows[i]
+				requests = append(requests, v)
+			}
+		}
+	} else {
+		for _, row := range e.Rows {
+			v := new(model.RowRequest)
+			v.RuleKey = ruleKey
+			v.Action = e.Action
+			v.Timestamp = e.Header.Timestamp
+			v.Row = row
+			requests = append(requests, v)
+		}
+	}
+	s.queue <- requests
+
+	return nil
+}
+
+func (s *handler) OnGTID(gtid mysql.GTIDSet) error {
+	return nil
+}
+
+func (s *handler) OnPosSynced(pos mysql.Position, set mysql.GTIDSet, force bool) error {
+	return nil
+}
+
+func (s *handler) String() string {
+	return "TransferHandler"
+}
+
+func (s *handler) startListener() {
+	go func() {
+		interval := time.Duration(config.InitConfig.FlushBulkInterval)
+		bulkSize := config.InitConfig.BulkSize
+		ticker := time.NewTicker(time.Millisecond * interval)
+		defer ticker.Stop()
+
+		lastSavedTime := time.Now()
+		requests := make([]*model.RowRequest, 0, bulkSize)
+		var current mysql.Position
+		from, _ := _transferService.positionDao.Get()
+		for {
+			needFlush := false
+			needSavePos := false
+			select {
+			case v := <-s.queue:
+				switch v := v.(type) {
+				case model.PosRequest:
+					now := time.Now()
+					if v.Force || now.Sub(lastSavedTime) > 3*time.Second {
+						lastSavedTime = now
+						needFlush = true
+						needSavePos = true
+						current = mysql.Position{
+							Name: v.Name,
+							Pos:  v.Pos,
+						}
+					}
+				case []*model.RowRequest:
+					requests = append(requests, v...)
+					needFlush = int64(len(requests)) >= config.InitConfig.BulkSize
+				}
+			case <-ticker.C:
+				needFlush = true
+			case <-s.stop:
+				return
+			}
+
+			if needFlush && len(requests) > 0 && _transferService.endpointEnable.Load() {
+				err := _transferService.endpoint.Consume(from, requests)
+				if err != nil {
+					_transferService.endpointEnable.Store(false)
+					metric.SetDestState(metric.DestStateFail,true)
+					logs.Error(err.Error())
+					go _transferService.stopDump()
+				}
+				requests = requests[0:0]
+			}
+			if needSavePos && _transferService.endpointEnable.Load() {
+				logs.Infof("save position %s %d", current.Name, current.Pos)
+				if err := _transferService.positionDao.Save(current); err != nil {
+					logs.Errorf("save sync position %s err %v, close sync", current, err)
+					_transferService.Close()
+					return
+				}
+				from = current
+			}
+		}
+	}()
+}
+
+func (s *handler) stopListener() {
+	log.Println("transfer stop")
+	s.stop <- struct{}{}
+}

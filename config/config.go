@@ -18,20 +18,28 @@ type Config struct {
 	Charset      string       `yaml:"charset"`
 	Flavor       string       `yaml:"flavor"`
 	LoggerConfig *logs.Config `yaml:"logger"` // 日志配置
+	SlaveID      uint32       `yaml:"slave_id"`
+	DumpExec     string       `yaml:"dump_exec"`
 
 	EnableExporter bool `yaml:"enable_exporter"` // 启用prometheus exporter，默认false
 	ExporterPort   int  `yaml:"exporter_addr"`   // prometheus exporter端口
 
 	Maxprocs int `yaml:"maxprocs"` // 最大协程数，默认CPU核心数*2
 
-	DataDir string `yaml:"data_dir"`
+	DataDir    string    `yaml:"data_dir"`
+	RuleConfig []Details `yaml:"rule_config"`
 
 	// target
-	RedisConfig *Redis `yaml:"redis"`
-	KafkaConfig *Kafka `yaml:"kafka"`
-	ESConfig    *ES    `yaml:"ES"`
-	EtcdConfig  *Etcd  `yaml:"etcd"`
-	isMQ        bool    `yaml:"is_mq"`
+	RedisConfig       *Redis `yaml:"redis"`
+	KafkaConfig       *Kafka `yaml:"kafka"`
+	ESConfig          *ES    `yaml:"ES"`
+	EtcdConfig        *Etcd  `yaml:"etcd"`
+	isMQ              bool   `yaml:"is_mq"`
+	isReserveRawData  bool   //保留原始数据
+	FlushBulkInterval int    `yaml:"flush_bulk_interval"`
+	BulkSize          int64  `yaml:"bulk_size"`
+	SkipMasterData    bool   `yaml:"skip_master_data"`
+	SkipNoPkTable     bool    `yaml:"skip_no_pk_table"`
 }
 
 // kafka配置
@@ -84,6 +92,7 @@ func NewConfig(fileName string) (*Config, error) {
 		return nil, err
 	}
 	defaultConfig := DefaultConfig(&c)
+	InitConfig = defaultConfig
 	return defaultConfig, nil
 }
 

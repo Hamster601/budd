@@ -41,6 +41,7 @@ var (
 	_ruleInsMap       = make(map[string]*Details)
 	_lockOfRuleInsMap sync.RWMutex
      _config *Config
+	InitConfig *Config
 )
 
 

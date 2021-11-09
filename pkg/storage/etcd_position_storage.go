@@ -2,27 +2,25 @@ package storage
 
 import (
 	"encoding/json"
+	"github.com/Hamster601/Budd/config"
 	"github.com/Hamster601/Budd/pkg/etcd"
 	"github.com/go-mysql-org/go-mysql/mysql"
 )
 
 type etcdPositionStorage struct {
-	filaPath string
 }
 
-func NewetcdPositionStorage(filapath string) *etcdPositionStorage {
-	return &etcdPositionStorage{
-		filaPath: filapath,
-	}
+func NewetcdPositionStorage( string) *etcdPositionStorage {
+	return &etcdPositionStorage{}
 }
 
-func (s *etcdPositionStorage) Initialize(filePath string) error {
+func (s *etcdPositionStorage) Initialize() error {
 	data, err := json.Marshal(mysql.Position{})
 	if err != nil {
 		return err
 	}
 
-	err = etcd.CreateIfNecessary(s.filaPath, string(data), nil)
+	err = etcd.CreateIfNecessary(config.InitConfig.EtcdConfig.EtcdFilePath, string(data), nil)
 	if err != nil {
 		return err
 	}
@@ -36,13 +34,13 @@ func (s *etcdPositionStorage) Save(pos mysql.Position) error {
 		return err
 	}
 
-	return etcd.Save(s.filaPath, string(data), nil)
+	return etcd.Save(config.InitConfig.EtcdConfig.EtcdFilePath, string(data), nil)
 }
 
 func (s *etcdPositionStorage) Get() (mysql.Position, error) {
 	var entity mysql.Position
 
-	data, _, err := etcd.Get(s.filaPath, nil)
+	data, _, err := etcd.Get(config.InitConfig.EtcdConfig.EtcdFilePath, nil)
 	if err != nil {
 		return entity, err
 	}

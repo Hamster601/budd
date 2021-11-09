@@ -34,6 +34,10 @@ func (c *Config) IsCluster() bool {
 	return true
 }
 
+func (c *Config) IsReserveRawData() bool {
+	return c.isReserveRawData
+}
+
 func (c *Config) Destination() string {
 	var des string
 	switch strings.ToUpper(c.Target) {
@@ -130,6 +134,7 @@ func RuleKeyList() []string {
 
 	return list
 }
+
 
 func (s *Details) Initialize() error {
 	if err := s.buildPaddingMap(); err != nil {
