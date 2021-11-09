@@ -12,4 +12,3 @@ func NewElsLoggerAgent() *ElsLoggerAgent {
 func (s *ElsLoggerAgent) Printf(format string, v ...interface{}) {
 	logs.Infof(format, v)
 }
-

@@ -101,4 +101,3 @@ func Errorf(template string, args ...interface{}) {
 	}
 	_logger.Sugar().Errorf(template, args...)
 }
-

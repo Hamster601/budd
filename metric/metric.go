@@ -5,8 +5,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-
-
 // 指标名称
 var (
 	LeaderStateGauge = promauto.NewGauge(

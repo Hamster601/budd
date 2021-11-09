@@ -1,6 +1,5 @@
 package logs
 
-
 const (
 	_logFileName     = "system.log"
 	_logLevelInfo    = "info"

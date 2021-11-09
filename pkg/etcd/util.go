@@ -1,13 +1,11 @@
 package etcd
 
-
-
 import (
 	"context"
 	"time"
 
 	"github.com/juju/errors"
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 )
 
 const etcdOpsTimeout = 1 * time.Second
@@ -23,7 +21,7 @@ func CreateIfNecessary(key, val string, ops clientv3.KV, opts ...clientv3.OpOpti
 	defer cancel()
 
 	_, err := ops.Txn(ctx).If(
-		clientv3.Compare(clientv3.ModifiedRevision(key), "=", 0),
+		clientv3.Compare(clientv3.ModRevision(key), "=", 0),
 	).Then(
 		clientv3.OpPut(key, val, opts...),
 	).Commit()
@@ -108,7 +106,7 @@ func Save(key, val string, ops clientv3.KV, opts ...clientv3.OpOption) error {
 	defer cancel()
 
 	resp, err := ops.Txn(ctx).If(
-		clientv3.Compare(clientv3.ModifiedRevision(key), ">", 0),
+		clientv3.Compare(clientv3.ModRevision(key), ">", 0),
 	).Then(
 		clientv3.OpPut(key, val, opts...),
 	).Commit()

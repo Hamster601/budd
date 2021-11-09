@@ -1,8 +1,10 @@
 package config
 
 import (
-	"html/template"
+	"github.com/Hamster601/Budd/pkg/model"
+	"github.com/go-mysql-org/go-mysql/schema"
 	"github.com/yuin/gopher-lua"
+	"html/template"
 )
 
 type EsMappingConfig struct {
@@ -26,12 +28,14 @@ type Details struct {
 	DefaultColumnValueConfig string `yaml:"default_column_values"`      // 默认的字段和值
 	ValueEncoder             string `yaml:"value_encoder"`              // #值编码，支持json、kv-commas、v-commas；默认为json；json形如：{"id":123,"name":"wangjie"} 、kv-commas形如：id=123,name="wangjie"、v-commas形如：123,wangjie
 	ValueFormatter           string `yaml:"value_formatter"`            //格式化定义key,{id}表示字段id的值、{name}表示字段name的值
+
 	LuaScript                string `yaml:"lua_script"`                 //lua 脚本
 	LuaFilePath              string `yaml:"lua_file_path"`              //lua 文件地址
 	DateFormatter            string `yaml:"date_formatter"`             //date类型格式化， 不填写默认2006-01-02
 
 	// ------------------- Kafka -----------------
 	KafkaTopic string `yaml:"kafka_topic"` //TOPIC名称,可以为空，默认使用表(Table)名称
+	ReserveRawData bool `yaml:"reserve_raw_data"` // 保留update之前的数据，针对KAFKA、RABBITMQ、ROCKETMQ有效
 
 	// ------------------- ES -----------------
 	ElsIndex   string             `yaml:"es_index"`    //Elasticsearch Index,可以为空，默认使用表(Table)名称
@@ -39,9 +43,15 @@ type Details struct {
 	EsMappings []*EsMappingConfig `yaml:"es_mappings"` //Elasticsearch mappings映射关系,可以为空，为空时根据数据类型自己推导
 	Redis      RedisValue         `yaml:"redis"`
 
-	LuaProto              *lua.FunctionProto
-	LuaFunction           *lua.LFunction
-	ValueTmpl             *template.Template
+	TableInfo             *schema.Table
+	TableColumnSize       int
+	IsCompositeKey        bool //是否联合主键
+	DefaultColumnValueMap map[string]string
+	PaddingMap            map[string]*model.Padding
+
+	LuaProto    *lua.FunctionProto
+	LuaFunction *lua.LFunction
+	ValueTmpl   *template.Template
 }
 
 type RedisValue struct {
@@ -64,4 +74,5 @@ type RedisValue struct {
 	RedisHashFieldColumnIndexs     []int
 	RedisSortedSetScoreColumnIndex int
 	RedisKeyTmpl                   *template.Template
+	IsCompositeKey                 bool
 }

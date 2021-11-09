@@ -2,6 +2,7 @@ package config
 
 import (
 	err "github.com/Hamster601/Budd/errors"
+	"github.com/Hamster601/Budd/pkg/logs"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"runtime"
@@ -9,19 +10,28 @@ import (
 
 // 应用相关配置
 type Config struct {
+	Target string `yaml:"target"`
 	// 数据库地址
-	Addr           string `yaml:"addr"`
-	User           string `yaml:"user"`
-	Password       string `yaml:"pass"`
-	Charset        string `yaml:"charset"`
-	EnableExporter bool   `yaml:"enable_exporter"` // 启用prometheus exporter，默认false
-	ExporterPort   int    `yaml:"exporter_addr"`   // prometheus exporter端口
+	Addr         string       `yaml:"addr"`
+	User         string       `yaml:"user"`
+	Password     string       `yaml:"pass"`
+	Charset      string       `yaml:"charset"`
+	Flavor       string       `yaml:"flavor"`
+	LoggerConfig *logs.Config `yaml:"logger"` // 日志配置
+
+	EnableExporter bool `yaml:"enable_exporter"` // 启用prometheus exporter，默认false
+	ExporterPort   int  `yaml:"exporter_addr"`   // prometheus exporter端口
 
 	Maxprocs int `yaml:"maxprocs"` // 最大协程数，默认CPU核心数*2
 
-	KafkaConfig Kafka `yaml:"kafka"`
-	ESConfig    ES    `yaml:"ES"`
-	EtcdConfig  Etcd  `yaml:"etcd"`
+	DataDir string `yaml:"data_dir"`
+
+	// target
+	RedisConfig *Redis `yaml:"redis"`
+	KafkaConfig *Kafka `yaml:"kafka"`
+	ESConfig    *ES    `yaml:"ES"`
+	EtcdConfig  *Etcd  `yaml:"etcd"`
+	isMQ        bool    `yaml:"is_mq"`
 }
 
 // kafka配置
@@ -40,9 +50,21 @@ type ES struct {
 }
 
 type Etcd struct {
+	BindIP       string `yaml:"bind_id"`
 	EtcdAddrs    string `yaml:"etcd_addrs"`
 	EtcdUser     string `yaml:"etcd_user"`
 	EtcdPassword string `yaml:"etcd_password"`
+
+	EtcdFilePath string `yaml:"etcd_file_path"`
+}
+
+type Redis struct {
+	// ------------------- REDIS -----------------
+	RedisAddr       string `yaml:"redis_addrs"`       //redis地址
+	RedisGroupType  string `yaml:"redis_group_type"`  //集群类型 sentinel或者cluster
+	RedisMasterName string `yaml:"redis_master_name"` //Master节点名称
+	RedisPass       string `yaml:"redis_pass"`        //redis密码
+	RedisDatabase   int    `yaml:"redis_database"`    //redis数据库
 }
 
 // NewConfig初始化配置

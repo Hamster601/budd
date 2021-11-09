@@ -1,6 +1,5 @@
 package stringutil
 
-
 import (
 	"bytes"
 	"crypto/hmac"

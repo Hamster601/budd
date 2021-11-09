@@ -127,4 +127,3 @@ func (s *EtcdLoggerAgent) Fatalf(format string, args ...interface{}) {
 
 // V reports whether verbosity level l is at least the requested verbose level.
 func (s *EtcdLoggerAgent) V(l int) bool { return false }
-

@@ -2,7 +2,6 @@ package snowflake
 
 import (
 	"github.com/sony/sonyflake"
-
 )
 
 // 雪花ID工具
@@ -24,7 +23,7 @@ func InitSnowflake(machineId uint16) {
 func NextId() (uint64, error) {
 	id, err := _sf.NextID()
 	if err != nil {
-          return 0, err
+		return 0, err
 	}
 	return id, nil
 }

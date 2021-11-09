@@ -79,4 +79,3 @@ func JsonBytes(v interface{}) []byte {
 	}
 	return bytes
 }
-
