@@ -35,26 +35,6 @@ func init() {
 
 func main() {
 
-	//stockFlag = true
-
-	//cfgPath = "D:\\transfer\\app.yml"
-
-	//cfgPath = "D:\\transfer\\release_test_luascript.yml"
-
-
-
-	// cfgPath = "${userhome}/data/kafka_release_test_lua.yml"
-	// cfgPath = "${userhome}/data/kafka_release_test_rule.yml"
-
-	//cfgPath = "${userhome}/data/es7_release_test_lua.yml"
-	//cfgPath = "${userhome}/data/es7_release_test_rule.yml"
-
-
-
-	//cfgPath = "${userhome}/data/redis_release_test_lua.yml"
-	//cfgPath = "${userhome}/data/redis_release_test_rule.yml"
-
-
 	flag.Parse()
 	if helpFlag {
 		flag.Usage()
@@ -156,10 +136,9 @@ func doPosition() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `version: 1.0.0
-Usage: transfer [-c filename] [-s stock]
-
-Options:
-`)
+	fmt.Fprintf(os.Stderr, `version: 0.0.1
+	Usage: transfer [-c filename] [-s stock]
+	Options:
+	`)
 	flag.PrintDefaults()
 }
