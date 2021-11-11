@@ -39,7 +39,7 @@ type Config struct {
 	FlushBulkInterval int    `yaml:"flush_bulk_interval"`
 	BulkSize          int64  `yaml:"bulk_size"`
 	SkipMasterData    bool   `yaml:"skip_master_data"`
-	SkipNoPkTable     bool    `yaml:"skip_no_pk_table"`
+	SkipNoPkTable     bool   `yaml:"skip_no_pk_table"`
 }
 
 // kafka配置
@@ -51,6 +51,7 @@ type Kafka struct {
 
 // ES配置
 type ES struct {
+	Name        string `yaml:"name"`
 	ElsAddr     string `yaml:"es_addrs"`    //Elasticsearch连接地址，多个用逗号分隔
 	ElsUser     string `yaml:"es_user"`     //Elasticsearch用户名
 	ElsPassword string `yaml:"es_password"` //Elasticsearch密码
