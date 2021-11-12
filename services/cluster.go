@@ -12,7 +12,7 @@ type ClusterService struct {
 
 func (s *ClusterService) boot() error {
 	log.Println("start master election")
-	err := _electionService.Elect()
+	err := electionService.Elect()
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func (s *ClusterService) startElectListener() {
 		for {
 			select {
 			case selected := <-s.electionSignal:
-				config.SetLeaderNode(_electionService.Leader())
+				config.SetLeaderNode(electionService.Leader())
 				config.SetLeaderFlag(selected)
 				if selected {
 					metric.SetLeaderState(metric.LeaderState,true)
@@ -43,5 +43,5 @@ func (s *ClusterService) startElectListener() {
 }
 
 func (s *ClusterService) Nodes() []string {
-	return _electionService.Nodes()
+	return electionService.Nodes()
 }

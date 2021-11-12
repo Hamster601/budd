@@ -7,7 +7,7 @@ import (
 
 var (
 	_transferService *TransferService
-	_electionService election.Service
+	electionService  election.Service
 	_clusterService  *ClusterService
 )
 
@@ -25,7 +25,7 @@ func Initialize() error {
 		_clusterService = &ClusterService{
 			electionSignal: make(chan bool, 1),
 		}
-		_electionService = election.NewElection(_clusterService.electionSignal)
+		electionService = election.NewElection(_clusterService.electionSignal)
 	}
 
 	return nil

@@ -16,7 +16,7 @@ import (
 	"sync"
 )
 
-// 存量数据
+// StockService 存量数据
 type StockService struct {
 	canal    *canal.Canal
 	endpoint endpoint.Endpoint

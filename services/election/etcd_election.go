@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const _electionNodeTTL = 2 //秒
+const electionNodeTTL = 2 //秒
 
 type etcdElection struct {
 	once sync.Once
@@ -44,7 +44,7 @@ func (s *etcdElection) doElect() {
 	go func() {
 
 		for {
-			session, err := concurrency.NewSession(storage.EtcdConn(), concurrency.WithTTL(_electionNodeTTL))
+			session, err := concurrency.NewSession(storage.EtcdConn(), concurrency.WithTTL(electionNodeTTL))
 			if err != nil {
 				logs.Error(err.Error())
 				return
@@ -81,7 +81,7 @@ func (s *etcdElection) doElect() {
 					s.beFollower("")
 					break
 				case <-ctx.Done():
-					ctxTmp, _ := context.WithTimeout(context.Background(), time.Second*_electionNodeTTL)
+					ctxTmp, _ := context.WithTimeout(context.Background(), time.Second*electionNodeTTL)
 					elc.Resign(ctxTmp)
 					session.Close()
 					s.beFollower("")
