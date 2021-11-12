@@ -29,13 +29,13 @@ type Details struct {
 	ValueEncoder             string `yaml:"value_encoder"`              // #值编码，支持json、kv-commas、v-commas；默认为json；json形如：{"id":123,"name":"wangjie"} 、kv-commas形如：id=123,name="wangjie"、v-commas形如：123,wangjie
 	ValueFormatter           string `yaml:"value_formatter"`            //格式化定义key,{id}表示字段id的值、{name}表示字段name的值
 
-	LuaScript                string `yaml:"lua_script"`                 //lua 脚本
-	LuaFilePath              string `yaml:"lua_file_path"`              //lua 文件地址
-	DateFormatter            string `yaml:"date_formatter"`             //date类型格式化， 不填写默认2006-01-02
+	LuaScript     string `yaml:"lua_script"`     //lua 脚本
+	LuaFilePath   string `yaml:"lua_file_path"`  //lua 文件地址
+	DateFormatter string `yaml:"date_formatter"` //date类型格式化， 不填写默认2006-01-02
 
 	// ------------------- Kafka -----------------
-	KafkaTopic string `yaml:"kafka_topic"` //TOPIC名称,可以为空，默认使用表(Table)名称
-	ReserveRawData bool `yaml:"reserve_raw_data"` // 保留update之前的数据，针对KAFKA、RABBITMQ、ROCKETMQ有效
+	KafkaTopic     string `yaml:"kafka_topic"`      //TOPIC名称,可以为空，默认使用表(Table)名称
+	ReserveRawData bool   `yaml:"reserve_raw_data"` // 保留update之前的数据，针对KAFKA、RABBITMQ、ROCKETMQ有效
 
 	// ------------------- ES -----------------
 	ElsIndex   string             `yaml:"es_index"`    //Elasticsearch Index,可以为空，默认使用表(Table)名称
