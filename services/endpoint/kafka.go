@@ -18,10 +18,10 @@ import (
 )
 
 type KafkaEndpoint struct {
-client   sarama.Client
-producer sarama.AsyncProducer
+	client   sarama.Client
+	producer sarama.AsyncProducer
 
-retryLock sync.Mutex
+	retryLock sync.Mutex
 }
 
 func newKafkaEndpoint() *KafkaEndpoint {
@@ -72,7 +72,7 @@ func (s *KafkaEndpoint) Consume(from mysql.Position, rows []*model.RowRequest) e
 			continue
 		}
 
-		metric.UpdateActionNum(row.Action, row.RuleKey,config.InitConfig.EnableExporter)
+		metric.UpdateActionNum(row.Action, row.RuleKey, config.InitConfig.EnableExporter)
 
 		if rule.LuaEnable() {
 			ls, err := s.buildMessages(row, rule)
@@ -84,7 +84,7 @@ func (s *KafkaEndpoint) Consume(from mysql.Position, rows []*model.RowRequest) e
 		} else {
 			m, err := s.buildMessage(row, rule)
 			if err != nil {
-				return errors.New(fmt.Sprintf("创建消息失败，错误：%s",err.Error()))
+				return errors.New(fmt.Sprintf("创建消息失败，错误：%s", err.Error()))
 			}
 			ms = append(ms, m)
 		}

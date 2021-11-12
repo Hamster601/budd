@@ -17,7 +17,6 @@ type Config struct {
 	Password     string       `yaml:"pass"`
 	Charset      string       `yaml:"charset"`
 	Flavor       string       `yaml:"flavor"`
-	LoggerConfig *logs.Config `yaml:"logger"` // 日志配置
 	SlaveID      uint32       `yaml:"slave_id"`
 	DumpExec     string       `yaml:"dump_exec"`
 
@@ -27,6 +26,8 @@ type Config struct {
 	Maxprocs int `yaml:"maxprocs"` // 最大协程数，默认CPU核心数*2
 
 	DataDir    string    `yaml:"data_dir"`
+	LoggerConfig *logs.Config `yaml:"logger"` // 日志配置
+
 	RuleConfig []Details `yaml:"rule_config"`
 
 	// target
