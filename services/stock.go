@@ -29,6 +29,7 @@ type StockService struct {
 	shutoff       *atomic.Bool
 }
 
+// 导出服务运行
 func NewStockService() *StockService {
 	return &StockService{
 		queueCh:   make(chan []*model.RowRequest, config.InitConfig.Maxprocs),
@@ -139,6 +140,7 @@ func (s *StockService) Run() error {
 	return nil
 }
 
+// export 数据导出
 func (s *StockService) export(fullName, columns string, batch int64, rule *config.Details) ([]*model.RowRequest, error) {
 	if s.shutoff.Load() {
 		return nil, errors.New("shutoff")

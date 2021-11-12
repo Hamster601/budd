@@ -103,9 +103,8 @@ func (s *TransferService) run() error {
 		s.canal = nil
 		s.wg.Done()
 	}(current)
-
+    s.wg.Wait() // 修复bug
 	// canal未提供回调，停留一秒，确保RunFrom启动成功
-	time.Sleep(time.Second)
 	return nil
 }
 
